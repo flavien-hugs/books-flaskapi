@@ -38,7 +38,7 @@ class Book(Updateable, db.Model):
     book_title = db.Column(db.String(80), unique=True, nullable=False)
     book_short_desc = db.Column(db.Text(180), nullable=True)
     book_cover = db.Column(db.String(180), nullable=True)
-    book_isbn = db.Column(db.Integer, unique=True, nullable=False)
+    book_isbn = db.Column(db.String(20), unique=True, nullable=False)
     book_number_of_page = db.Column(db.Integer, nullable=False)
     book_url = db.Column(db.String(80), nullable=False, index=True, unique=True)
     book_short_url = db.Column(db.String(6), nullable=True)
