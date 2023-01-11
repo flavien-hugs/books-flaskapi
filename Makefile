@@ -50,4 +50,4 @@ current: ## Shows the current revision of the database.
 	$(MANAGE) flask db current
 
 shell: ## Flask Shell Load
-	$(MANAGE) flask shell
+	flask shell
