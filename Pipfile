@@ -9,6 +9,7 @@ flask-migrate = "*"
 flask-sqlalchemy = "*"
 python-dotenv = "*"
 validators = "*"
+flask-jwt-extended = "*"
 
 [dev-packages]
 pre-commit = "*"

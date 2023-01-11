@@ -4,9 +4,17 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import validators
 from src.database import db, User
 from src.constants.http_status_codes import (
+    HTTP_200_OK,
     HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
     HTTP_409_CONFLICT,
+)
+from flask_jwt_extended import (
+    jwt_required,
+    get_jwt_identity,
+    create_access_token,
+    create_refresh_token,
 )
 
 auth = Blueprint("auth", __name__, url_prefix="/api/v1/auth")
@@ -30,10 +38,10 @@ def register():
     if not validators.email(user_addr_email):
         return jsonify({"error": "Email is not valid"}), HTTP_400_BAD_REQUEST
 
-    if User.query.filter_by(user_addr_email=user_addr_email).first() is not None:
+    if User.query.filter_by(user_addr_email=user_addr_email).one_or_none() is not None:
         return jsonify({"error": "Email is taken"}), HTTP_409_CONFLICT
 
-    if User.query.filter_by(user_fullname=user_fullname).first() is not None:
+    if User.query.filter_by(user_fullname=user_fullname).one_or_none() is not None:
         return jsonify({"error": "Username is taken"}), HTTP_409_CONFLICT
 
     password_hashed = generate_password_hash(user_password)
@@ -45,20 +53,50 @@ def register():
     db.session.add(new_user)
     db.session.commit()
 
+    data = {
+        "user_fullname": user_fullname,
+        "user_addr_email": user_addr_email,
+    }
+
     return (
-        jsonify(
-            {
-                "message": "New user created successfully",
-                "user": {
-                    "user_fullname": user_fullname,
-                    "user_addr_email": user_addr_email,
-                },
-            }
-        ),
+        jsonify({"message": "New user created successfully", "user": data}),
         HTTP_201_CREATED,
     )
+
+
+@auth.post("/login", strict_slashes=False)
+def login():
+    user_addr_email = request.json.get("user_addr_email", None)
+    user_password = request.json.get("user_password", None)
+
+    user = User.query.filter_by(user_addr_email=user_addr_email).one_or_none()
+
+    if user and check_password_hash(user.user_password, user_password):
+        refresh_token = create_refresh_token(identity=user.id)
+        access_token = create_access_token(identity=user.id)
+
+        data = {
+            "refresh_token": refresh_token,
+            "access_token": access_token,
+            "user_fullname": user.user_fullname,
+            "user_email": user.user_addr_email,
+        }
+
+        return (
+            jsonify({"message": "User logged successfully", "user": data}),
+            HTTP_200_OK,
+        )
+
+    return jsonify({"error": "Wrong credentials"}), HTTP_401_UNAUTHORIZED
 
 
 @auth.get("/me", strict_slashes=False)
 def me():
     return {"user": "me"}
+
+
+@auth.get("/protected")
+@jwt_required()
+def protected():
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), HTTP_200_OK
