@@ -59,9 +59,15 @@ def handle_books():
             HTTP_201_CREATED,
         )
     else:
-        books = Book.query.filter_by(user_id=current_user)
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 6, type=int)
+
+        books = Book.query.filter_by(user_id=current_user).paginate(
+            page=page, per_page=per_page
+        )
+
         data = []
-        for item in books:
+        for item in books.items:
             data.append(
                 {
                     "id": item.id,
@@ -79,4 +85,14 @@ def handle_books():
                 }
             )
 
-        return jsonify({"books": data}), HTTP_200_OK
+        meta = {
+            "page": books.page,
+            "pages": books.pages,
+            "books_total_count": books.total,
+            "prev_page": books.prev_num,
+            "next_page": books.next_num,
+            "has_next": books.has_next,
+            "has_prev": books.has_prev,
+        }
+
+        return jsonify({"books": data, "meta": meta}), HTTP_200_OK
