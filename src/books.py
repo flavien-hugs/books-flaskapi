@@ -64,7 +64,7 @@ def handle_books():
         per_page = request.args.get("per_page", 6, type=int)
 
         books = Book.query.filter_by(user_id=current_user).paginate(
-            page=page, per_page=per_page
+            page=page, per_page=per_page, error_out=False
         )
 
         data = []
