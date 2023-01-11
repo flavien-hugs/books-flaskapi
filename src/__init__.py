@@ -1,10 +1,10 @@
 import os
 
-from flask import Flask
+from flask import Flask, redirect
 
 from src.auth import auth
 from src.books import books
-from src.database import db
+from src.database import db, Book
 from flask_jwt_extended import JWTManager
 
 
@@ -30,5 +30,14 @@ def create_app(config_name=None):
 
     app.register_blueprint(auth)
     app.register_blueprint(books)
+
+    @app.get("/<string:book_short_url>")
+    def redirect_to_short_url(book_short_url):
+        book = Book.query.filter_by(book_short_url=book_short_url).first_or_404()
+
+        if book:
+            book.book_viewed += 1
+            db.session.commit()
+            return redirect(book.book_url)
 
     return app
