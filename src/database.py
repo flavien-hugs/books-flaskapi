@@ -3,6 +3,7 @@ import random
 from enum import unique
 from datetime import datetime
 
+from slugify import slugify
 from flask_sqlalchemy import SQLAlchemy
 from .utils import Updateable
 
@@ -37,9 +38,9 @@ class Book(Updateable, db.Model):
     book_title = db.Column(db.String(80), unique=True, nullable=False)
     book_short_desc = db.Column(db.Text(180), nullable=True)
     book_cover = db.Column(db.String(180), nullable=True)
-    book_isbn = db.Column(db.Integer, nullable=False)
+    book_isbn = db.Column(db.Integer, unique=True, nullable=False)
     book_number_of_page = db.Column(db.Integer, nullable=False)
-    book_url = db.Column(db.Text, nullable=False)
+    book_url = db.Column(db.String(80), nullable=False, index=True, unique=True)
     book_short_url = db.Column(db.String(6), nullable=True)
     book_viewed = db.Column(db.Integer, default=0)
     book_added_at = db.Column(db.DateTime, default=datetime.now())
@@ -63,3 +64,11 @@ class Book(Updateable, db.Model):
         if self.query.filter_by(book_short_url=random_chars).first():
             self._generate_short_url()
         return random_chars
+
+    @staticmethod
+    def generate_book_slug(target, value, oldvalue, initiator):
+        if value and (not target.book_url or value != oldvalue):
+            target.book_url = slugify(value)
+
+
+db.event.listen(Book.book_title, "set", Book.generate_book_slug, retval=False)
