@@ -10,6 +10,7 @@ flask-sqlalchemy = "*"
 python-dotenv = "*"
 validators = "*"
 flask-jwt-extended = "*"
+uni-slugify = "*"
 
 [dev-packages]
 pre-commit = "*"
