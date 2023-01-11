@@ -124,3 +124,70 @@ def get_book(id):
     }
 
     return jsonify(data), HTTP_200_OK
+
+
+@books.delete("/delete/<int:id>", strict_slashes=False)
+@jwt_required()
+def delete_book(id):
+    current_user = get_jwt_identity()
+    book = Book.query.filter_by(user_id=current_user, id=id).one_or_none()
+
+    if not book:
+        return jsonify({"message": "Book not found"}), HTTP_404_NOT_FOUND
+
+    db.session.delete(book)
+    db.session.commit()
+
+    return (
+        jsonify({"message": f"Book {book.book_title} deleted successfully"}),
+        HTTP_200_OK,
+    )
+
+
+@books.put("/edit/<int:id>", strict_slashes=False)
+@books.patch("/edit/<int:id>", strict_slashes=False)
+@jwt_required()
+def edit_book(id):
+    current_user = get_jwt_identity()
+    book = Book.query.filter_by(user_id=current_user, id=id).one_or_none()
+
+    if not book:
+        return jsonify({"message": "Book not found"}), HTTP_404_NOT_FOUND
+
+    book_author_name = request.get_json().get("book_author_name")
+    book_title = request.get_json().get("book_title")
+    book_short_desc = request.get_json().get("book_short_desc")
+    book_cover = request.get_json().get("book_cover")
+    book_isbn = request.get_json().get("book_isbn")
+    book_number_of_page = request.get_json().get("book_number_of_page")
+
+    book.book_author_name = book_author_name
+    book.book_title = book_title
+    book.book_short_desc = book_short_desc
+    book.book_cover = book_cover
+    book.book_isbn = book_isbn
+    book.book_number_of_page = book_number_of_page
+
+    db.session.commit()
+
+    data = {
+        "id": book.id,
+        "book_author_name": book.book_author_name,
+        "book_title": book.book_title,
+        "book_short_desc": book.book_short_desc,
+        "book_cover": book.book_cover,
+        "book_isbn": book.book_isbn,
+        "book_number_of_page": book.book_number_of_page,
+        "book_url": book.book_url,
+        "book_short_url": book.book_short_url,
+        "book_viewed": book.book_viewed,
+        "book_added_at": book.book_added_at,
+        "book_updated_at": book.book_updated_at,
+    }
+
+    return (
+        jsonify(
+            {"message": f"Book {book.book_title} updated successfully", "book": data}
+        ),
+        HTTP_200_OK,
+    )
