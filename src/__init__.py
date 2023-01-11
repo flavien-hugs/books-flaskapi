@@ -1,12 +1,14 @@
 import os
-
-from flask import Flask, redirect, jsonify
+import json
+from flask import Flask, redirect, jsonify, make_response
 
 from src.auth import auth
 from src.books import books
 from src.database import db, Book
+
 from flask_jwt_extended import JWTManager
 from src.constants.http_status_codes import (
+    HTTP_200_OK,
     HTTP_404_NOT_FOUND,
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
@@ -34,6 +36,29 @@ def create_app(config_name=None):
 
     app.register_blueprint(auth)
     app.register_blueprint(books)
+
+    @app.get("/", strict_slashes=False)
+    def books_all():
+        books = Book.query.all()
+        data = []
+        for item in books:
+            data.append(
+                {
+                    "id": item.id,
+                    "book_author_name": item.book_author_name,
+                    "book_title": item.book_title,
+                    "book_short_desc": item.book_short_desc,
+                    "book_cover": item.book_cover,
+                    "book_isbn": item.book_isbn,
+                    "book_number_of_page": item.book_number_of_page,
+                    "book_url": item.book_url,
+                    "book_short_url": item.book_short_url,
+                    "book_viewed": item.book_viewed,
+                    "book_added_at": item.book_added_at,
+                    "book_updated_at": item.book_updated_at,
+                }
+            )
+        return jsonify({"books": data}), HTTP_200_OK
 
     @app.get("/<string:book_short_url>")
     def redirect_to_short_url(book_short_url):

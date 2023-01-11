@@ -24,7 +24,7 @@ Simple API with Flask
 
 - step 4: run project
   	```
-  	python run.py
+  	flask run
   	```
 
 - step 5: Navigate to:

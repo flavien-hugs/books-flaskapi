@@ -193,7 +193,6 @@ def edit_book(id):
     )
 
 
-@books.get("/statistic/", strict_slashes=False)
 @books.get("/stats", strict_slashes=False)
 @jwt_required()
 def get_statistics():
