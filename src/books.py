@@ -191,3 +191,24 @@ def edit_book(id):
         ),
         HTTP_200_OK,
     )
+
+
+@books.get("/statistic/", strict_slashes=False)
+@books.get("/stats", strict_slashes=False)
+@jwt_required()
+def get_statistics():
+    data = []
+    current_user = get_jwt_identity()
+    items = Book.query.filter_by(user_id=current_user).all()
+
+    for item in items:
+        data.append(
+            {
+                "id": item.id,
+                "book_viewed": item.book_viewed,
+                "book_url": item.book_url,
+                "book_short_url": item.book_short_url,
+            }
+        )
+
+    return jsonify({"data": data})
