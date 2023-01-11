@@ -100,3 +100,12 @@ def me():
         "user_addr_email": user.user_addr_email,
     }
     return jsonify({"user": data}), HTTP_200_OK
+
+
+@auth.get("/token/refresh", strict_slashes=False)
+@jwt_required(refresh=True)
+def refresh_user_token():
+    identity = get_jwt_identity()
+    access_token = create_access_token(identity=identity)
+    data = {"access_token": access_token}
+    return jsonify({"access_token": data}), HTTP_200_OK
