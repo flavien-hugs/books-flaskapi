@@ -91,12 +91,12 @@ def login():
 
 
 @auth.get("/me", strict_slashes=False)
-def me():
-    return {"user": "me"}
-
-
-@auth.get("/protected")
 @jwt_required()
-def protected():
-    current_user = get_jwt_identity()
-    return jsonify(logged_in_as=current_user), HTTP_200_OK
+def me():
+    current_user_id = get_jwt_identity()
+    user = User.query.filter_by(id=current_user_id).one_or_none()
+    data = {
+        "user_fullname": user.user_fullname,
+        "user_addr_email": user.user_addr_email,
+    }
+    return jsonify({"user": data}), HTTP_200_OK
