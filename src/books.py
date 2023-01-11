@@ -6,6 +6,7 @@ from src.constants.http_status_codes import (
     HTTP_200_OK,
     HTTP_201_CREATED,
     HTTP_409_CONFLICT,
+    HTTP_404_NOT_FOUND,
 )
 from src.database import db, Book
 
@@ -96,3 +97,30 @@ def handle_books():
         }
 
         return jsonify({"books": data, "meta": meta}), HTTP_200_OK
+
+
+@books.get("/<int:id>", strict_slashes=False)
+@jwt_required()
+def get_book(id):
+    current_user = get_jwt_identity()
+    book = Book.query.filter_by(user_id=current_user, id=id).one_or_none()
+
+    if not book:
+        return jsonify({"message": "Book not found"}), HTTP_404_NOT_FOUND
+
+    data = {
+        "id": book.id,
+        "book_author_name": book.book_author_name,
+        "book_title": book.book_title,
+        "book_short_desc": book.book_short_desc,
+        "book_cover": book.book_cover,
+        "book_isbn": book.book_isbn,
+        "book_number_of_page": book.book_number_of_page,
+        "book_url": book.book_url,
+        "book_short_url": book.book_short_url,
+        "book_viewed": book.book_viewed,
+        "book_added_at": book.book_added_at,
+        "book_updated_at": book.book_updated_at,
+    }
+
+    return jsonify(data), HTTP_200_OK
